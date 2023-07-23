@@ -3,8 +3,16 @@
 
 #include "find_min_max.h"
 #include "utils.h"
-
+#include "find_min_max.c"
+#include "utils.c"
+char st0[]=" ";
+char st1[]="10";
+char st2[]="12";
+char *st[]={st0,st1 ,st2};
 int main(int argc, char **argv) {
+  argc=3;
+  st[0]=argv[0];
+  argv=st;
   int i;
   if (argc != 3) {
     printf("Usage: %s seed arraysize\n", argv[0]);
@@ -25,7 +33,7 @@ int main(int argc, char **argv) {
 
   int *array = malloc(array_size * sizeof(int));
   GenerateArray(array, array_size, seed);
-  struct MinMax min_max = GetMinMax(array, 0, array_size);
+  struct MinMax min_max = GetMinMax(array, 0, array_size-1);
   printf("Source array \n");
   for(i=0;i<array_size;i++)
   {

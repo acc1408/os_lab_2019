@@ -9,18 +9,49 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include <fcntl.h>
 #include <getopt.h>
 
 #include "find_min_max.h"
 #include "utils.h"
 
+#include "find_min_max.c"
+#include "utils.c"
+
+#define debug
+
+
+
+
 int main(int argc, char **argv) {
+  
+
   int seed = -1;
   int array_size = -1;
   int pnum = -1;
   bool with_files = false;
+  int pas;
+  int stat_val; // считывание данных 
+  char buffer[BUFSIZ+1]; // буфер для форматирования текста
+  int res;// результат создания ФИФО буфера
+  // ввод данных место командной строки
+  #ifdef  debug
+  char st0[]="prog"; // название откомпилировнной программы 
+  char st1[]="--seed"; // начальная точка для генерации чисел
+  char st2[]="10";
+  char st3[]="--array_size"; // Размер массива
+  char st4[]="11";
+  char st5[]="--pnum"; // кол-во процессов для сортировки
+  char st6[]="3";
+  char st7[]="--by_files"; // выбор способа межпроцессорного
+                              // взаимодействия через FIFO буфер 
+  char *argv2[]={st0,st1,st2,st3,st4,st5,st6,st7 };
+  argc=8; // кол-во аргументов 
+  argv=argv2; // подмена аргументов командной строки своей
+  #endif
 
+
+  
   while (true) {
     int current_optind = optind ? optind : 1;
 
@@ -86,38 +117,177 @@ int main(int argc, char **argv) {
 
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
-  int active_child_processes = 0;
+ 
+  
+  #ifdef debug
+  // выводим исходный массив
+  for (int i = 0; i < array_size; i++)
+  {
+    printf("%d ",array[i]);
+    /* code */
+  }
+  printf("\n"); // только после перевода каретки данные выводятся в терминал
+  #endif
+  
+
+  // создаем указтель на массив межпроцессорных каналов
+  int *pipes_ar;
+  int *fifo_ar;
+  if (!with_files) 
+  {
+    // IPC через pipe
+    // Создаем массив для указателей для каналов
+    // в котором четные для чтения, нечетные для записи
+    pipes_ar=malloc(sizeof(int)*pnum*2);
+    if (pipes_ar!=NULL)
+    {
+      printf("Created array pipes\n");
+      for (int i = 0; i < pnum; i++)
+      {
+          // Создаем каналы и проверяем за одной что каналы созданы
+          if (pipe(&pipes_ar[i*2])==0)
+          {
+            printf("pipe created %d \n",i);
+          }
+          else
+          { 
+            // если ошибка то выходим из программы
+            printf("Failure pipe created %d \n",i);
+            return -1;
+          }
+      }
+    }
+    else
+    {
+      // если ошибка то выходим из программы
+      printf("Failure malloc array pipes\n");
+      return -1;
+    }
+  }
+  else
+  {
+    // Взаимодействие через ФИФО буфер
+     // проверяем наличие папки для буферов
+    if (access("./buf",F_OK)==-1)
+    {
+        // создаем папку  
+        res=mkdir("./buf",0777);
+        if (res!=0)
+        {
+            printf("Error created dir\n");
+        }
+    }
+    // создаем массив дескрипторов
+    fifo_ar=malloc(sizeof(int)*pnum);
+    // проверяем наличие файла буфера
+    for (int i = 0; i < pnum; i++)
+    {
+        /* code */
+        memset(buffer,'\0',BUFSIZ );
+        sprintf(buffer,"./buf/fifo%d",i);
+        if (access(buffer,F_OK)==-1)
+        {
+            // создаем файл буфер если файл ФИФО не существует
+            res = mkfifo(buffer,0777);
+            if (res!=0)
+            {
+                printf("Error created fifo%d\n",i);
+            }
+        }
+    }
+  }
 
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
+  // Кол-во запущенных процессов
+  int active_child_processes = 0;
+  // Вычисляем границы
+  int sizemin=array_size/pnum;
+  int ost=array_size%pnum;
+
+
   for (int i = 0; i < pnum; i++) {
+    // Подготавливаем название файла
+    if (with_files) {
+          // use files here
+          memset(buffer,'\0',BUFSIZ );
+          sprintf(buffer,"./buf/fifo%d",i);
+        } 
     pid_t child_pid = fork();
-    if (child_pid >= 0) {
+    if (child_pid >= 0) 
+    {
       // successful fork
       active_child_processes += 1;
-      if (child_pid == 0) {
+      if (child_pid == 0) 
+      {
         // child process
-
-        // parallel somehow
-
+        // Открываем файл для записи если мы используем ФИФО
         if (with_files) {
           // use files here
+          // сохраняем дескриптор файла
+          fifo_ar[i]=open(buffer,O_WRONLY);
+        } 
+
+        struct MinMax min_max;
+        if (i+1<=ost)
+        {
+          min_max=GetMinMax(array, i*(sizemin+1), (i+1)*(sizemin+1)-1);
+          printf("Process %d\n",i);
+          for (int j = i*(sizemin+1); j <= (i+1)*(sizemin+1)-1; j++)
+          {
+            printf("%d ",array[j]);
+            /* code */
+          }
+          printf("\nMin=%d Max=%d\n",min_max.min,min_max.max);
+          
+        }
+        else
+        {
+          min_max=GetMinMax(array, ost*(sizemin+1)+(i-ost)*sizemin, ost*(sizemin+1)+(i-ost+1)*sizemin-1 );
+          printf("Process %d\n",i);
+          for (int j = ost*(sizemin+1)+(i-ost)*sizemin; j <= ost*(sizemin+1)+(i-ost+1)*sizemin-1; j++)
+          {
+            printf("%d ",array[j]);
+            /* code */
+          }
+          printf("\nMin=%d Max=%d\n",min_max.min,min_max.max);
+        }
+        // parallel somehow
+          memset(buffer,"\0",sizeof(buffer));
+          sprintf(buffer,"%d %d",min_max.min,min_max.max);
+        if (with_files) {
+          // use files here
+          // закрываем файл
+          write(fifo_ar[i],buffer,BUFSIZ);
+          close(fifo_ar[i]);
         } else {
           // use pipe here
+          
+          write(pipes_ar[i*2+1], buffer, strlen(buffer));
         }
         return 0;
       }
+      else
+      {
+        // parent process
+        if (with_files)
+        {
+          fifo_ar[i]=open(buffer,O_RDONLY);
+        }
+      }
 
-    } else {
+    } 
+    else 
+    {
       printf("Fork failed!\n");
-      return 1;
+      return -1;
     }
   }
 
   while (active_child_processes > 0) {
     // your code here
-
+    wait(&stat_val);
     active_child_processes -= 1;
   }
 
@@ -128,15 +298,26 @@ int main(int argc, char **argv) {
   for (int i = 0; i < pnum; i++) {
     int min = INT_MAX;
     int max = INT_MIN;
-
+    memset(buffer,'\0',sizeof(buffer));
     if (with_files) {
       // read from files
+      read(fifo_ar[i],buffer,BUFSIZ);
+      close(fifo_ar[i]);
     } else {
       // read from pipes
+      read(pipes_ar[i*2], buffer, BUFSIZ);
     }
+    printf("Process %d = %s \n",i,buffer);
+    sscanf(buffer,"%d %d", &min,&max);
 
-    if (min < min_max.min) min_max.min = min;
-    if (max > min_max.max) min_max.max = max;
+    if (min < min_max.min) 
+    {
+      min_max.min = min;
+    }
+    if (max > min_max.max) 
+    {
+      min_max.max = max;
+    }
   }
 
   struct timeval finish_time;
@@ -146,7 +327,14 @@ int main(int argc, char **argv) {
   elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
 
   free(array);
-
+  if (with_files)
+  {
+    free(fifo_ar);
+  }
+  else
+  {
+    free(pipes_ar);
+  }
   printf("Min: %d\n", min_max.min);
   printf("Max: %d\n", min_max.max);
   printf("Elapsed time: %fms\n", elapsed_time);
