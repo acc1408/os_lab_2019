@@ -15,13 +15,12 @@
 #include "find_min_max.h"
 #include "utils.h"
 
+
+//#define debug
+#ifdef debug
 #include "find_min_max.c"
 #include "utils.c"
-
-#define debug
-
-
-
+#endif
 
 int main(int argc, char **argv) {
   
@@ -38,7 +37,7 @@ int main(int argc, char **argv) {
   #ifdef  debug
   char st0[]="prog"; // название откомпилировнной программы 
   char st1[]="--seed"; // начальная точка для генерации чисел
-  char st2[]="10";
+  char st2[]="1i0";
   char st3[]="--array_size"; // Размер массива
   char st4[]="11";
   char st5[]="--pnum"; // кол-во процессов для сортировки
@@ -46,7 +45,7 @@ int main(int argc, char **argv) {
   char st7[]="--by_files"; // выбор способа межпроцессорного
                               // взаимодействия через FIFO буфер 
   char *argv2[]={st0,st1,st2,st3,st4,st5,st6,st7 };
-  argc=8; // кол-во аргументов 
+  argc=8; // кол-во аргументов в argv2
   argv=argv2; // подмена аргументов командной строки своей
   #endif
 
@@ -73,16 +72,34 @@ int main(int argc, char **argv) {
             seed = atoi(optarg);
             // your code here
             // error handling
+            sprintf(buffer,"%d",seed);
+            if  (strcmp(buffer,optarg)!=0)
+            {
+              printf("Error input numeric --seed\n");
+              return -1;
+            }
             break;
           case 1:
             array_size = atoi(optarg);
             // your code here
             // error handling
+            sprintf(buffer,"%d",array_size);
+            if  (strcmp(buffer,optarg)!=0)
+            {
+              printf("Error input numeric --array_size\n");
+              return -1;
+            }
             break;
           case 2:
             pnum = atoi(optarg);
             // your code here
             // error handling
+            sprintf(buffer,"%d",pnum);
+            if  (strcmp(buffer,optarg)!=0)
+            {
+              printf("Error input numeric --pnum\n");
+              return -1;
+            }
             break;
           case 3:
             with_files = true;
@@ -114,24 +131,31 @@ int main(int argc, char **argv) {
            argv[0]);
     return 1;
   }
-
+  // Выделяем память под массив и проверяем 
   int *array = malloc(sizeof(int) * array_size);
+  if (array==NULL)
+  {
+    printf("Error malloc array\n");
+    return -1;
+  }
   GenerateArray(array, array_size, seed);
  
   
-  #ifdef debug
+  
   // выводим исходный массив
+  printf("Source array\n");
   for (int i = 0; i < array_size; i++)
   {
     printf("%d ",array[i]);
     /* code */
   }
   printf("\n"); // только после перевода каретки данные выводятся в терминал
-  #endif
+
   
 
   // создаем указтель на массив межпроцессорных каналов
   int *pipes_ar;
+  // Создаем указатель на массив ФИФО Буферов
   int *fifo_ar;
   if (!with_files) 
   {
@@ -254,7 +278,7 @@ int main(int argc, char **argv) {
           printf("\nMin=%d Max=%d\n",min_max.min,min_max.max);
         }
         // parallel somehow
-          memset(buffer,"\0",sizeof(buffer));
+          memset(buffer,'\0',sizeof(buffer));
           sprintf(buffer,"%d %d",min_max.min,min_max.max);
         if (with_files) {
           // use files here
