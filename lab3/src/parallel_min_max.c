@@ -15,7 +15,6 @@
 #include "find_min_max.h"
 #include "utils.h"
 
-
 //#define debug
 #ifdef debug
 #include "find_min_max.c"
@@ -37,7 +36,7 @@ int main(int argc, char **argv) {
   #ifdef  debug
   char st0[]="prog"; // название откомпилировнной программы 
   char st1[]="--seed"; // начальная точка для генерации чисел
-  char st2[]="1i0";
+  char st2[]="10";
   char st3[]="--array_size"; // Размер массива
   char st4[]="11";
   char st5[]="--pnum"; // кол-во процессов для сортировки
