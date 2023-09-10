@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#define mutx
 void do_one_thing(int *);
 void do_another_thing(int *);
 void do_wrap_up(int);
@@ -57,7 +57,9 @@ void do_one_thing(int *pnum_times) {
   unsigned long k;
   int work;
   for (i = 0; i < 50; i++) {
-    // pthread_mutex_lock(&mut);
+    #ifdef mutx
+      pthread_mutex_lock(&mut);
+    #endif
     printf("doing one thing\n");
     work = *pnum_times;
     printf("counter = %d\n", work);
@@ -65,7 +67,9 @@ void do_one_thing(int *pnum_times) {
     for (k = 0; k < 500000; k++)
       ;                 /* long cycle */
     *pnum_times = work; /* write back */
-	// pthread_mutex_unlock(&mut);
+    #ifdef mutx
+	    pthread_mutex_unlock(&mut);
+    #endif
   }
 }
 
@@ -74,7 +78,9 @@ void do_another_thing(int *pnum_times) {
   unsigned long k;
   int work;
   for (i = 0; i < 50; i++) {
-    // pthread_mutex_lock(&mut);
+    #ifdef mutx
+      pthread_mutex_lock(&mut);
+    #endif
     printf("doing another thing\n");
     work = *pnum_times;
     printf("counter = %d\n", work);
@@ -82,7 +88,9 @@ void do_another_thing(int *pnum_times) {
     for (k = 0; k < 500000; k++)
       ;                 /* long cycle */
     *pnum_times = work; /* write back */
-    // pthread_mutex_unlock(&mut);
+    #ifdef mutx
+	    pthread_mutex_unlock(&mut);
+    #endif
   }
 }
 

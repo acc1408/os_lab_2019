@@ -1,34 +1,15 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <ctype.h>
-#include <limits.h>
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <getopt.h>
-#include <signal.h>
-#include "find_min_max.h"
-#include "utils.h"
-
-
-#include "find_min_max.h"
-#include "utils.h"
-
 #define debug
-#ifdef debug
-#include "find_min_max.c"
-#include "utils.c"
-#endif
+
 
 struct SumArgs {
   int *array;
@@ -193,26 +174,6 @@ int main(int argc, char **argv) {
   //--конец выделения памятя
   //-------------------
 
-  //-------------------------------------
-  //----Генерируем исходный массив и выводим массив 
-  //-----------------------------
-
-  GenerateArray(array, array_size, seed);
- 
-  // выводим исходный массив
-  printf("Source array\n");
-  for (int i = 0; i < array_size; i++)
-  {
-    printf("%d ",array[i]);
-    /* code */
-  }
-  printf("\n"); // только после перевода каретки данные выводятся в терминал
-  //-------------------------------------
-  //----Конец генерирования исходный массива 
-  //-----------------------------
-  struct timeval start_time;
-  gettimeofday(&start_time, NULL);
-
  // Вычисляем границы для распределения массива по процессам
   
   int sizemin=array_size/threads_num;
@@ -266,17 +227,9 @@ int main(int argc, char **argv) {
     total_sum += args[i].sum;
   }
 
-  struct timeval finish_time;
-  gettimeofday(&finish_time, NULL);
-
-  double elapsed_time = (finish_time.tv_sec - start_time.tv_sec) * 1000.0;
-  elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
-
   free(array);
   free(threads);
   free(args);
   printf("Total: %d\n", total_sum);
-
-  printf("Elapsed time: %fms\n", elapsed_time);
   return 0;
 }
