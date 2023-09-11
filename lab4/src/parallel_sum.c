@@ -24,7 +24,7 @@
 #include "find_min_max.h"
 #include "utils.h"
 
-#define debug
+//#define debug
 #ifdef debug
 #include "find_min_max.c"
 #include "utils.c"
