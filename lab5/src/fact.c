@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define debug
+//#define debug
 
 void do_one_thing(int *);
 void do_another_thing(int *);

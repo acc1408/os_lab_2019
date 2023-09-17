@@ -9,11 +9,11 @@ all : mutex fact
 #	$(CC) -o sequential_min_max find_min_max.o utils.o sequential_min_max.c $(CFLAGS)
 
 fact : 
-	$(CC) -o fact fact.c $(CFLAGS)
+	$(CC) -o fact fact.c -lpthread $(CFLAGS)
 
 mutex : 
 	$(CC) -o mutex mutex.c -lpthread $(CFLAGS)
 
 
 clean :
-	rm -f mutex
+	rm -f mutex fact

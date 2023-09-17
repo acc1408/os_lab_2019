@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define mutx
+//#define mutx
 void do_one_thing(int *);
 void do_another_thing(int *);
 void do_wrap_up(int);
