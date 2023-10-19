@@ -187,7 +187,6 @@ int main(int argc, char **argv) {
     printf("%llu ",mf[i]);
   }
     printf("\n");
-  
   //-----------------------
   //--конец выделения памятя
   //-------------------
@@ -205,60 +204,59 @@ int main(int argc, char **argv) {
     while (factor.kol>1)
     {
       
-    
-    // запускаем процессы вычисления факториала
-    for (int i = 0; i < pnum; i++)
-    {
-      if (pthread_create(&threads[i], NULL, (void *)calcFact,
-            (void *)&factor) != 0) 
-        {
-          perror("pthread_create");
-          exit(1);
-        }
-    }
-
-    // ожидание завершения процессов
-
-    for (int i = 0; i < pnum; i++)
-    {
-      if (pthread_join(threads[i], NULL) != 0) 
+      // запускаем процессы вычисления факториала
+      for (int i = 0; i < pnum; i++)
       {
-      perror("pthread_join");
-      exit(1);
+        if (pthread_create(&threads[i], NULL, (void *)calcFact,
+              (void *)&factor) != 0) 
+          {
+            perror("pthread_create");
+            exit(1);
+          }
       }
-    }
-    // конец ожидания процессов
 
-    // вывод результата
-    printf("Массив после прохода \n");
-    for (int i = 0; i < kol; i++)
-    {
-      printf("%llu ",mf[i]);
-    }
-    printf("\n");
-    // конец вывода результата
+     // ожидание завершения процессов
 
-    // Сжатие массива
-    for (int i = 1; i < kol/2+kol%2; i++)
-    {
-      mf[i]=mf[i*2];
-      mf[i*2]=0;
-    }
-    // конец Сжатие массива
+      for (int i = 0; i < pnum; i++)
+      {
+        if (pthread_join(threads[i], NULL) != 0) 
+        {
+        perror("pthread_join");
+        exit(1);
+        }
+      }
+      // конец ожидания процессов
 
-    // вывод результата после сжатия
-    printf("Массив после сжатия \n");
-    for (int i = 0; i < kol; i++)
-    {
-      printf("%llu ",mf[i]);
-    }
+      // вывод результата
+      printf("Массив после прохода \n");
+      for (int i = 0; i < kol; i++)
+      {
+        printf("%llu ",mf[i]);
+      }
       printf("\n");
-    // конец вывода результата после сжатия
-    
-    // корректируем массив для вычисления факториала
-    factor.kol=factor.kol/2+factor.kol%2;
-    factor.i=0; // индекс для обработки
-    //конец корректируем массив для вычисления факториала
+      // конец вывода результата
+
+      // Сжатие массива
+      for (int i = 1; i < kol/2+kol%2; i++)
+      {
+        mf[i]=mf[i*2];
+        mf[i*2]=0;
+      }
+      // конец Сжатие массива
+
+      // вывод результата после сжатия
+      printf("Массив после сжатия \n");
+      for (int i = 0; i < kol; i++)
+      {
+        printf("%llu ",mf[i]);
+      }
+        printf("\n");
+      // конец вывода результата после сжатия
+      
+      // корректируем массив для вычисления факториала
+      factor.kol=factor.kol/2+factor.kol%2;
+      factor.i=0; // индекс для обработки
+      //конец корректируем массив для вычисления факториала
     }
     ans=factor.f[0]%mod;
     printf("%d!=%llu\n",kol,factor.f[0]);
