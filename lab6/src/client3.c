@@ -10,7 +10,7 @@
 #include <getopt.h>
 #include <stdbool.h>
 
-#define debug // включение режима дебага
+//#define debug // включение режима дебага
 #define num_server_max 10 // максимальное кол-во серверов
 
 typedef struct
@@ -134,20 +134,7 @@ int main(int argc, char **argv)
         printf("getopt returned character code 0%o?\n", c);
     }
   }
-/*
-  if (optind < argc) {
-    printf("Has at least one no option argument\n");
-    return 1;
-  }
 
-  if (kol == -1 || pnum == -1 || mod == -1) {
-    printf("Usage: %s --kol \"num\" --pnum \"num\" --mod \"num\" \n",
-           argv[0]);
-    return 1;
-  }
-*/
-  // factor.kol=kol;
-  // printf("%llu \n",factor.f);
   //---------------------
   //--- Конец Разбора параметоров комндной строки
   //-------------------------
@@ -295,31 +282,7 @@ int main(int argc, char **argv)
   //printf("Factorial %llu\n",fact%mod);
   printf("End program\n");
 
-  /*
-  sockfd= socket(AF_INET,SOCK_STREAM,0);
-  // настраиваем структуру 
-  adress.sin_family=AF_INET;
-  adress.sin_addr.s_addr=inet_addr("127.0.0.1");
-  adress.sin_port=htons(9734);
-  len=sizeof(adress);
   
-  result=connect(sockfd, (struct sockaddr *) &adress,len  );
-  if (!result)
-  {
-    sprintf(buf,"%d %d",a, b);
-    write(sockfd,buf,strlen(buf));
-    printf("send: %s\n",buf);
-    read(sockfd,buf,sizeof(buf) );
-    sscanf(buf,"%llu",&f);
-    printf("Resv: %llu\n",f);
-
-    close(sockfd);
-  }
-  else 
-  {
-    printf("Error connect with server\n");
-  }
-  */
   
   return 0;
 }
