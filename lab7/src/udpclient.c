@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#define debug // включение режима дебага
+
 #define SERV_PORT 20001
 #define BUFSIZE 1024
 #define SADDR struct sockaddr
@@ -20,14 +22,24 @@ int main(int argc, char **argv) {
   struct sockaddr_in servaddr;
   struct sockaddr_in cliaddr;
 
-  if (argc != 2) {
-    printf("usage: client <IPaddress of server>\n");
+  #ifdef  debug
+  char st0[]="tcpclient"; // название откомпилировнной программы 
+  char st1[]="127.0.0.1"; // ip address
+  char st2[]="20001"; // port
+  char *argv2[]={st0,st1,st2};
+  argc=sizeof(argv2); // кол-во аргументов в argv2
+  argv=argv2; // подмена аргументов командной строки своей  
+  #endif
+
+
+  if (argc < 4) {
+    printf("Too few arguments \n");
     exit(1);
   }
 
   memset(&servaddr, 0, sizeof(servaddr));
   servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons(SERV_PORT);
+  servaddr.sin_port = htons(atoi(argv[2]));
 
   if (inet_pton(AF_INET, argv[1], &servaddr.sin_addr) < 0) {
     perror("inet_pton problem");
@@ -45,7 +57,7 @@ int main(int argc, char **argv) {
       perror("sendto problem");
       exit(1);
     }
-
+    memset(recvline,'\0',sizeof(recvline));
     if (recvfrom(sockfd, recvline, BUFSIZE, 0, NULL, NULL) == -1) {
       perror("recvfrom problem");
       exit(1);

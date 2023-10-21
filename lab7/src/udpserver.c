@@ -8,16 +8,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+//#define debug // включение режима дебага
+
 #define SERV_PORT 20001
 #define BUFSIZE 1024
 #define SADDR struct sockaddr
 #define SLEN sizeof(struct sockaddr_in)
 
-int main() {
+int main(int argc, char **argv) {
   int sockfd, n;
   char mesg[BUFSIZE], ipadr[16];
   struct sockaddr_in servaddr;
   struct sockaddr_in cliaddr;
+
+  #ifdef  debug
+  char st0[]="tcpServer"; // название откомпилировнной программы 
+  char st1[]="20001"; // port
+  char *argv2[]={st0,st1};
+  argc=sizeof(argv2); // кол-во аргументов в argv2
+  argv=argv2; // подмена аргументов командной строки своей  
+  #endif
+
+  if (argc < 2) {
+    printf("Not input port \n");
+    exit(1);
+  }
 
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     perror("socket problem");
@@ -27,7 +42,7 @@ int main() {
   memset(&servaddr, 0, SLEN);
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servaddr.sin_port = htons(SERV_PORT);
+  servaddr.sin_port = htons(atoi(argv[1]));
 
   if (bind(sockfd, (SADDR *)&servaddr, SLEN) < 0) {
     perror("bind problem");
